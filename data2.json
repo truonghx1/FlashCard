@@ -1,0 +1,10 @@
+[
+  { "front": "Computer", "back": "Máy tính" },
+  { "front": "Keyboard", "back": "Bàn phím" },
+  { "front": "Developer", "back": "Lập trình viên" },
+  { "front": "Database", "back": "Cơ sở dữ liệu" },
+  { "front": "Network", "back": "Mạng" },
+  { "front": "Software", "back": "Phần mềm" },
+  { "front": "Browser", "back": "Trình duyệt" },
+  { "front": "Deploy", "back": "Triển khai" }
+]
