@@ -84,8 +84,28 @@ function renderCard() {
   backText.textContent = item.back;
   card.classList.remove("flipped"); // luôn về mặt trước
   counter.textContent = `${index + 1} / ${cards.length}`;
+  fitText(frontText);
+  fitText(backText);
   // đọc text của mặt đang hiển thị (mặt trước)
   speakCurrentFace();
+}
+
+// ====== Tự thu nhỏ chữ cho vừa khung (shrink-to-fit) ======
+function fitText(el) {
+  const face = el.parentElement;
+  const maxFont = 40; // px - cỡ chữ lớn nhất
+  const minFont = 12; // px - cỡ chữ nhỏ nhất
+  let size = maxFont;
+  el.style.fontSize = size + "px";
+  // giảm dần đến khi chữ nằm gọn trong khung (trừ padding)
+  while (
+    size > minFont &&
+    (el.scrollHeight > face.clientHeight - 1 ||
+      el.scrollWidth > face.clientWidth - 1)
+  ) {
+    size -= 1;
+    el.style.fontSize = size + "px";
+  }
 }
 
 // ====== Phát hiện tiếng Anh ======
@@ -122,7 +142,7 @@ card.addEventListener("click", () => {
 });
 
 card.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" || e.key === " ") {
+  if (e.key === "Enter") {
     e.preventDefault();
     card.click();
   }
@@ -141,11 +161,32 @@ prevBtn.addEventListener("click", () => {
 speakBtn.addEventListener("click", speakCurrentFace);
 backBtn.addEventListener("click", showHomeView);
 
+// Tính lại cỡ chữ khi đổi kích thước cửa sổ (vd: iframe Notion co giãn)
+window.addEventListener("resize", () => {
+  if (studyView.classList.contains("hidden")) return;
+  fitText(frontText);
+  fitText(backText);
+});
+
 // Điều hướng bằng phím (tiện khi không nhúng iframe)
+// ArrowLeft: thẻ trái | ArrowRight: thẻ phải | Space: lật thẻ | Ctrl: đọc văn bản
 document.addEventListener("keydown", (e) => {
   if (studyView.classList.contains("hidden")) return;
-  if (e.key === "ArrowRight") nextBtn.click();
-  if (e.key === "ArrowLeft") prevBtn.click();
+
+  if (e.key === "ArrowRight") {
+    e.preventDefault();
+    nextBtn.click();
+  } else if (e.key === "ArrowLeft") {
+    e.preventDefault();
+    prevBtn.click();
+  } else if (e.key === " " || e.code === "Space") {
+    e.preventDefault();
+    card.classList.toggle("flipped");
+    speakCurrentFace();
+  } else if (e.key === "Control") {
+    e.preventDefault();
+    speakCurrentFace();
+  }
 });
 
 // ====== Init ======
