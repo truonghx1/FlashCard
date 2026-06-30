@@ -8,9 +8,8 @@
 .card-inner {
   position: relative;
   width: 100%;
-  /* responsive height: keeps a nice ratio inside narrow Notion iframes */
-  aspect-ratio: 3 / 2;
-  min-height: 200px;
+  /* fixed height so the frame never grows with long text */
+  height: 260px;
   transition: transform 0.6s;
   transform-style: preserve-3d;
 }
@@ -32,9 +31,17 @@
   border-radius: 1.25rem;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
   font-weight: 700;
-  /* fluid font size for narrow widths */
-  font-size: clamp(1.5rem, 6vw, 2.5rem);
+  overflow: hidden;
+}
+
+/* span chứa chữ: JS sẽ chỉnh font-size cho vừa khung */
+.card-face span {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  line-height: 1.2;
   word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .card-front {
