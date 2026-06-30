@@ -1,0 +1,58 @@
+/* 3D flip card */
+.card {
+  perspective: 1000px;
+  cursor: pointer;
+  max-width: 480px;
+}
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  /* responsive height: keeps a nice ratio inside narrow Notion iframes */
+  aspect-ratio: 3 / 2;
+  min-height: 200px;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.card.flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-face {
+  position: absolute;
+  inset: 0;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  text-align: center;
+  border-radius: 1.25rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+  font-weight: 700;
+  /* fluid font size for narrow widths */
+  font-size: clamp(1.5rem, 6vw, 2.5rem);
+  word-break: break-word;
+}
+
+.card-front {
+  background: #ffffff;
+  color: #1e293b;
+}
+
+.card-back {
+  background: #4f46e5;
+  color: #ffffff;
+  transform: rotateY(180deg);
+}
+
+.card:focus {
+  outline: none;
+}
+.card:focus-visible .card-inner {
+  outline: 3px solid #818cf8;
+  outline-offset: 4px;
+  border-radius: 1.25rem;
+}
