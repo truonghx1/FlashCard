@@ -1,0 +1,10 @@
+[
+  { "front": "Hello", "back": "Xin chào" },
+  { "front": "Apple", "back": "Quả táo" },
+  { "front": "Book", "back": "Quyển sách" },
+  { "front": "Water", "back": "Nước" },
+  { "front": "Friend", "back": "Bạn bè" },
+  { "front": "School", "back": "Trường học" },
+  { "front": "Happy", "back": "Hạnh phúc" },
+  { "front": "Beautiful", "back": "Đẹp" }
+]
