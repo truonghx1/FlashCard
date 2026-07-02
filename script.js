@@ -44,9 +44,9 @@ function renderHome() {
 }
 
 // ====== Mở 1 bộ từ ======
-async function openDeck(deck) {
+async function openDeck(deck, push = true) {
   try {
-    const res = await fetch(deck.file);
+    const res = await fetch("/" + deck.file);
     if (!res.ok) throw new Error("Không tải được " + deck.file);
     cards = await res.json();
     if (!Array.isArray(cards) || cards.length === 0)
@@ -56,8 +56,21 @@ async function openDeck(deck) {
     index = 0;
     showStudyView();
     renderCard();
+    if (push) history.pushState({ deckId: deck.id }, "", "/" + deck.id);
   } catch (err) {
     alert("Lỗi: " + err.message);
+  }
+}
+
+// ====== Định tuyến theo URL ======
+// Đọc phần path (vd: /data1) rồi mở đúng bộ từ, tiện để embed vào Notion.
+function routeFromPath(push = false) {
+  const id = location.pathname.replace(/^\/+|\/+$/g, "");
+  const deck = DECKS.find((d) => d.id === id);
+  if (deck) {
+    openDeck(deck, push);
+  } else {
+    showHomeView(push);
   }
 }
 
@@ -69,12 +82,13 @@ function showStudyView() {
   title.textContent = currentDeckName;
 }
 
-function showHomeView() {
+function showHomeView(push = true) {
   window.speechSynthesis.cancel();
   studyView.classList.add("hidden");
   homeView.classList.remove("hidden");
   backBtn.classList.add("hidden");
   title.textContent = "📚 Flashcard";
+  if (push) history.pushState({}, "", "/");
 }
 
 // ====== Hiển thị thẻ hiện tại ======
@@ -93,15 +107,24 @@ function renderCard() {
 // ====== Tự thu nhỏ chữ cho vừa khung (shrink-to-fit) ======
 function fitText(el) {
   const face = el.parentElement;
+  const style = getComputedStyle(face);
+  // vùng nội dung thực (đã trừ padding) để chữ luôn nằm gọn và canh giữa
+  const availH =
+    face.clientHeight -
+    parseFloat(style.paddingTop) -
+    parseFloat(style.paddingBottom);
+  const availW =
+    face.clientWidth -
+    parseFloat(style.paddingLeft) -
+    parseFloat(style.paddingRight);
   const maxFont = 40; // px - cỡ chữ lớn nhất
   const minFont = 12; // px - cỡ chữ nhỏ nhất
   let size = maxFont;
   el.style.fontSize = size + "px";
-  // giảm dần đến khi chữ nằm gọn trong khung (trừ padding)
+  // giảm dần đến khi chữ nằm gọn trong vùng nội dung
   while (
     size > minFont &&
-    (el.scrollHeight > face.clientHeight - 1 ||
-      el.scrollWidth > face.clientWidth - 1)
+    (el.scrollHeight > availH || el.scrollWidth > availW)
   ) {
     size -= 1;
     el.style.fontSize = size + "px";
@@ -159,7 +182,10 @@ prevBtn.addEventListener("click", () => {
 });
 
 speakBtn.addEventListener("click", speakCurrentFace);
-backBtn.addEventListener("click", showHomeView);
+backBtn.addEventListener("click", () => showHomeView());
+
+// Nút back/forward của trình duyệt
+window.addEventListener("popstate", () => routeFromPath(false));
 
 // Tính lại cỡ chữ khi đổi kích thước cửa sổ (vd: iframe Notion co giãn)
 window.addEventListener("resize", () => {
@@ -191,3 +217,4 @@ document.addEventListener("keydown", (e) => {
 
 // ====== Init ======
 renderHome();
+routeFromPath(false);
