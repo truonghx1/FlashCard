@@ -1,0 +1,20 @@
+[
+  {
+    "id": "data1",
+    "name": "Data 1",
+    "emoji": "🟦",
+    "file": "data1.json"
+  },
+  {
+    "id": "data2",
+    "name": "Data 2",
+    "emoji": "🟩",
+    "file": "data2.json"
+  },
+  {
+    "id": "data3",
+    "name": "Data3",
+    "emoji": "🗂️",
+    "file": "data3.json"
+  }
+]
