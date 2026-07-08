@@ -16,5 +16,11 @@
     "name": "Data3",
     "emoji": "🗂️",
     "file": "data3.json"
+  },
+  {
+    "id": "tu-loai",
+    "name": "Từ loại",
+    "emoji": "😉",
+    "file": "tu-loai.json"
   }
 ]
