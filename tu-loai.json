@@ -1,0 +1,42 @@
+[
+  {
+    "front": "Noun",
+    "back": "Danh từ(book, student, English)"
+  },
+  {
+    "front": "Pronoun",
+    "back": "Đại từ(I, you, he, they)"
+  },
+  {
+    "front": "Verb",
+    "back": "Động từ(learn, go, eat)"
+  },
+  {
+    "front": "Adjective",
+    "back": "Tính từ(good, beautiful, difficult)"
+  },
+  {
+    "front": "Adverb",
+    "back": "Trạng từ(quickly, very, well)"
+  },
+  {
+    "front": "Preposition",
+    "back": "Giới từ(in, on, at, with)"
+  },
+  {
+    "front": "Conjunction",
+    "back": "Liên từ(and, but, because)"
+  },
+  {
+    "front": "Determiner / Article",
+    "back": "Từ hạn định / mạo từ(a, an, the, this, my)"
+  },
+  {
+    "front": "Interjection",
+    "back": "Thán từ(oh, wow, hey)"
+  },
+  {
+    "front": "Auxiliary verb",
+    "back": "Trợ động từ(am, is, are, do, have, will, can)"
+  }
+]
