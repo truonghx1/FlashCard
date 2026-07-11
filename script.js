@@ -678,40 +678,26 @@ function isEnglish(text) {
   return !vietnamese.test(text);
 }
 
-// ====== Phát âm (Web Speech API + fallback audio) ======
-// Một số WebView nhúng (vd: app Notion trên Android) có window.speechSynthesis
-// nhưng KHÔNG có giọng đọc nào, nên speak() im lặng không phát gì. Khi phát hiện
-// điều đó, ta chuyển sang phát file âm thanh thật qua thẻ <audio>, hoạt động
-// ổn định trên hầu hết WebView của cả Android lẫn iOS.
+// ====== Phát âm ======
+// QUAN TRỌNG: trong app Notion, trang chạy trong iframe khác origin bên trong
+// WebView (Android) / WKWebView (iOS). Ở môi trường này, media CHỈ được phát khi
+// lệnh play() chạy NGAY trong cử chỉ chạm của người dùng. Vì thế ta phát file âm
+// thanh thật (thẻ <audio>) ngay lập tức khi người dùng chạm, thử lần lượt nhiều
+// nguồn TTS, và chỉ dùng Web Speech API làm phương án cuối. Cách này phát được
+// trên cả Android lẫn iOS, kể cả khi WebView không có bộ đọc TTS của hệ thống.
 let ttsAudio = null;
-let ttsTimer = null;
 
-// Nạp trước danh sách giọng đọc. Trên iOS/desktop danh sách sẽ có; trên WebView
-// Android thiếu TTS thì luôn rỗng -> dùng làm tín hiệu để chọn fallback.
-function getVoicesSafe() {
-  if (!("speechSynthesis" in window)) return [];
-  try {
-    return window.speechSynthesis.getVoices() || [];
-  } catch (e) {
-    return [];
-  }
-}
-if ("speechSynthesis" in window) {
-  getVoicesSafe();
-  try {
-    window.speechSynthesis.addEventListener("voiceschanged", getVoicesSafe);
-  } catch (e) {}
-}
-
-function clearTtsTimer() {
-  if (ttsTimer) {
-    clearTimeout(ttsTimer);
-    ttsTimer = null;
-  }
-}
+// Các nguồn phát âm (trả về file mp3), thử theo thứ tự nếu nguồn trước lỗi.
+const TTS_SOURCES = [
+  (t) =>
+    "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q=" +
+    encodeURIComponent(t),
+  (t) =>
+    "https://api.streamelements.com/kappa/v2/speech?voice=Brian&text=" +
+    encodeURIComponent(t),
+];
 
 function stopSpeaking() {
-  clearTtsTimer();
   if ("speechSynthesis" in window) {
     try {
       window.speechSynthesis.cancel();
@@ -719,65 +705,57 @@ function stopSpeaking() {
   }
   if (ttsAudio) {
     try {
+      ttsAudio.onerror = null;
       ttsAudio.pause();
       ttsAudio.currentTime = 0;
     } catch (e) {}
   }
 }
 
-function playAudioFallback(text) {
+function speakWithSynthesis(text) {
+  if (!("speechSynthesis" in window)) return;
   try {
-    const url =
-      "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q=" +
-      encodeURIComponent(text);
-    if (!ttsAudio) ttsAudio = new Audio();
-    ttsAudio.src = url;
-    const p = ttsAudio.play();
-    if (p && typeof p.catch === "function") p.catch(() => {});
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "en-US";
+    u.rate = 0.95;
+    window.speechSynthesis.speak(u);
   } catch (e) {}
+}
+
+function playTts(text, i) {
+  i = i || 0;
+  if (i >= TTS_SOURCES.length) {
+    // Hết nguồn audio -> thử Web Speech API (nếu WebView có hỗ trợ).
+    speakWithSynthesis(text);
+    return;
+  }
+  try {
+    if (!ttsAudio) {
+      ttsAudio = new Audio();
+      ttsAudio.preload = "auto";
+    }
+    let advanced = false;
+    const next = () => {
+      if (advanced) return;
+      advanced = true;
+      playTts(text, i + 1);
+    };
+    ttsAudio.onerror = next;
+    ttsAudio.src = TTS_SOURCES[i](text);
+    const p = ttsAudio.play();
+    if (p && typeof p.catch === "function") p.catch(next);
+  } catch (e) {
+    playTts(text, i + 1);
+  }
 }
 
 function speak(text) {
   if (!text) return;
   stopSpeaking();
-
-  // Chỉ dùng Web Speech API khi thực sự có giọng đọc. WebView Android không có
-  // giọng -> getVoicesSafe() rỗng -> phát audio ngay, tránh bị "im lặng".
-  const canSpeech =
-    "speechSynthesis" in window && getVoicesSafe().length > 0;
-
-  if (canSpeech) {
-    try {
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = "en-US";
-      u.rate = 0.95;
-      let started = false;
-      u.onstart = () => {
-        started = true;
-        clearTtsTimer();
-      };
-      u.onerror = () => {
-        if (!started) playAudioFallback(text);
-      };
-      window.speechSynthesis.speak(u);
-
-      // Lưới an toàn: nếu vì lý do nào đó giọng đọc không bắt đầu, phát audio.
-      ttsTimer = setTimeout(() => {
-        ttsTimer = null;
-        if (!started && !window.speechSynthesis.speaking) {
-          try {
-            window.speechSynthesis.cancel();
-          } catch (e) {}
-          playAudioFallback(text);
-        }
-      }, 1200);
-      return;
-    } catch (e) {
-      // rơi xuống fallback bên dưới
-    }
-  }
-
-  playAudioFallback(text);
+  // Phát NGAY trong cử chỉ chạm của người dùng (không dùng setTimeout) để không
+  // bị chính sách autoplay của WebView chặn.
+  playTts(text, 0);
 }
 
 // Đọc mặt đang hiển thị nếu đó là tiếng Anh
