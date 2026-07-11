@@ -2,14 +2,19 @@
 .card {
   perspective: 1000px;
   cursor: pointer;
+  width: 100%;
   max-width: 480px;
+  /* chiều cao co giãn theo khung: lấp đầy vùng còn lại, giới hạn hợp lý */
+  height: 100%;
+  max-height: 360px;
 }
 
 .card-inner {
   position: relative;
   width: 100%;
-  /* fixed height so the frame never grows with long text */
-  height: 260px;
+  /* co giãn theo vùng chứa (khung embed) thay vì cố định, tránh tràn/cắt */
+  height: 100%;
+  min-height: 90px;
   transition: transform 0.6s;
   transform-style: preserve-3d;
 }

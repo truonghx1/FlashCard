@@ -7,8 +7,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body class="bg-slate-100 min-h-screen text-slate-800">
-  <div class="max-w-2xl mx-auto px-4 py-6 flex flex-col min-h-screen">
+<body class="bg-slate-100 text-slate-800">
+  <div class="max-w-2xl mx-auto px-4 py-4 flex flex-col min-h-screen min-h-[100dvh]">
 
     <!-- Header -->
     <header class="mb-4 flex items-center gap-3">
@@ -47,8 +47,8 @@
       </div>
 
       <!-- Card -->
-      <div class="flex-1 flex items-center justify-center mb-5">
-        <div id="card" class="card w-full" tabindex="0" role="button" aria-label="Lật thẻ">
+      <div class="flex-1 flex items-center justify-center mb-3">
+        <div id="card" class="card w-full" tabindex="0" role="button" aria-label="Lật thẽ">
           <div class="card-inner">
             <div class="card-face card-front">
               <span id="frontText"></span>
@@ -59,10 +59,10 @@
           </div>
         </div>
       </div>
-      <p class="text-center text-xs text-slate-400 mb-4">Nhấn vào thẻ để lật 🔄</p>
+      <p class="text-center text-xs text-slate-400 mb-3">Nhấn vào thẽ để lật 🔄</p>
 
       <!-- Controls -->
-      <div class="flex items-center justify-center gap-3 pb-4">
+      <div class="flex items-center justify-center gap-3 pb-1">
         <button id="prevBtn" class="px-5 py-3 rounded-xl bg-white shadow hover:bg-slate-50 active:scale-95 transition font-medium flex items-center gap-1">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
           Previous
