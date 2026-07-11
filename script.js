@@ -688,12 +688,13 @@ function isEnglish(text) {
 let ttsAudio = null;
 
 // Các nguồn phát âm (trả về file mp3), thử theo thứ tự nếu nguồn trước lỗi.
+// Ưu tiên proxy CÙNG TÊN MIỀN (/api/tts) vì WebView của app Notion chặn audio
+// từ tên miền khác (ORB). Các nguồn ngoài chỉ dùng dự phòng khi mở ngoài trình
+// duyệt/PWA (nơi không bị chặn cross-origin).
 const TTS_SOURCES = [
+  (t) => "/api/tts?tl=en&text=" + encodeURIComponent(t),
   (t) =>
     "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q=" +
-    encodeURIComponent(t),
-  (t) =>
-    "https://api.streamelements.com/kappa/v2/speech?voice=Brian&text=" +
     encodeURIComponent(t),
 ];
 
