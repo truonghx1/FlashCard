@@ -22,5 +22,11 @@
     "name": "Từ loại",
     "emoji": "😉",
     "file": "tu-loai.json"
+  },
+  {
+    "id": "toeic-ex1-2",
+    "name": "Toeic ex1",
+    "emoji": "🗂️",
+    "file": "toeic-ex1-2.json"
   }
 ]
