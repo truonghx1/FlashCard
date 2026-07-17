@@ -28,5 +28,11 @@
     "name": "Toeic ex1",
     "emoji": "🗂️",
     "file": "data/toeic-ex1-2.json"
+  },
+  {
+    "id": "product-manufacture",
+    "name": "Product manufacture",
+    "emoji": "👨‍",
+    "file": "data/product-manufacture.json"
   }
 ]
