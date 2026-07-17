@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ghép từ với nghĩa</title>
+<style>
+  /* ====== Reset & nền ====== */
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: #f1f5f9;               /* nền sáng nhẹ nhàng */
+    color: #1e293b;
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;                    /* vừa đúng 1 màn hình */
+    overflow-x: hidden;                /* KHÔNG cho cuộn ngang */
+    overflow-y: auto;                  /* màn hình quá nhỏ thì cho cuộn dọc */
+  }
+
+  /* ====== Thanh trên cùng: thông tin + nút thoát ====== */
+  header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 12px;
+  }
+  .info {
+    display: flex;
+    gap: 12px;
+    font-size: clamp(12px, 2.5vw, 15px);
+    color: #475569;
+    min-width: 0;
+  }
+  .info b { color: #4f46e5; }
+  #deckName {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 40vw;
+  }
+  #exitBtn {
+    flex: 0 0 auto;
+    border: none;
+    background: #fff;
+    color: #64748b;
+    padding: 6px 14px;
+    border-radius: 10px;
+    font-size: clamp(12px, 2.5vw, 14px);
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0,0,0,.12);
+    cursor: pointer;
+    transition: background .15s, color .15s;
+  }
+  #exitBtn:hover { background: #fee2e2; color: #dc2626; }
+
+  /* ====== Lưới 5 cột x 6 hàng ====== */
+  #grid {
+    flex: 1 1 auto;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);   /* luôn 5 cột */
+    grid-auto-rows: 1fr;                     /* các hàng cao bằng nhau */
+    gap: clamp(3px, 0.8vw, 8px);             /* khoảng cách nhỏ nhưng rõ */
+    padding: 0 10px 10px;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    min-height: 0;
+  }
+
+  /* ====== Ô từ / nghĩa ====== */
+  .tile {
+    display: flex;
+    align-items: center;                     /* căn giữa dọc */
+    justify-content: center;                 /* căn giữa ngang */
+    text-align: center;
+    padding: clamp(2px, 0.8vw, 8px);
+    border-radius: clamp(6px, 1.2vw, 12px);
+    border: 2px solid transparent;
+    cursor: pointer;
+    user-select: none;
+    overflow: hidden;
+    word-break: break-word;                  /* cho phép xuống dòng hợp lý */
+    overflow-wrap: anywhere;
+    line-height: 1.15;
+    /* cỡ chữ co giãn theo màn hình, JS sẽ thu nhỏ thêm nếu chữ dài */
+    font-size: clamp(10px, 2.2vw, 17px);
+    font-weight: 500;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    transition: transform .12s, box-shadow .12s, background .15s, border-color .15s, opacity .3s;
+    min-width: 0;
+    min-height: 0;
+  }
+  /* Hai loại ô khác nhau vừa đủ để đẹp, không quá lộ liễu */
+  .tile.word    { background: #eef2ff; }     /* ô từ tiếng Anh */
+  .tile.meaning { background: #f0fdfa; }     /* ô nghĩa tiếng Việt */
+
+  @media (hover: hover) {
+    .tile:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,.12); }
+  }
+
+  /* Ô đang được chọn */
+  .tile.selected {
+    border-color: #6366f1;
+    background: #c7d2fe;
+    transform: scale(1.04);
+    box-shadow: 0 4px 12px rgba(99,102,241,.35);
+  }
+  /* Cặp đúng: xanh lá rồi biến mất */
+  .tile.correct {
+    background: #86efac !important;
+    border-color: #22c55e;
+    color: #14532d;
+  }
+  /* Ô đã ghép xong: biến mất nhưng vẫn giữ chỗ trong lưới */
+  .tile.gone { opacity: 0; pointer-events: none; }
+  /* Cặp sai: đỏ + rung nhẹ */
+  .tile.wrong {
+    background: #fca5a5 !important;
+    border-color: #ef4444;
+    color: #7f1d1d;
+    animation: shake .45s;
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-5px); }
+    40% { transform: translateX(5px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+
+  /* ====== Thông báo hoàn thành ====== */
+  #doneOverlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(241,245,249,.75);
+    z-index: 50;
+  }
+  #doneOverlay.show { display: flex; }
+  #doneOverlay .msg {
+    background: #fff;
+    padding: 24px 48px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.15);
+    font-size: clamp(22px, 6vw, 36px);
+    font-weight: 800;
+    color: #16a34a;
+    animation: pop .4s;
+  }
+  @keyframes pop {
+    0% { transform: scale(.6); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* Màn hình rất nhỏ: giảm khoảng cách & padding, vẫn giữ 5 cột */
+  @media (max-width: 380px) {
+    #grid { gap: 3px; padding: 0 6px 6px; }
+    .tile { padding: 2px; border-radius: 6px; }
+    header { padding: 6px 8px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- Thanh trên: số ván, cặp còn lại, tên bộ từ và nút thoát -->
+  <header>
+    <div class="info">
+      <span>Ván <b id="roundNum">1</b></span>
+      <span>Còn <b id="pairsLeft">15</b> cặp</span>
+      <span id="deckName"></span>
+    </div>
+    <button id="exitBtn" type="button">✕ Thoát</button>
+  </header>
+
+  <!-- Lưới 30 ô (5 cột x 6 hàng) -->
+  <main id="grid"></main>
+
+  <!-- Thông báo hoàn thành ván -->
+  <div id="doneOverlay"><div class="msg">🎉 Hoàn thành!</div></div>
+
+<script>
+"use strict";
+/* =========================================================================
+ * GHÉP TỪ VỚI NGHĨA
+ * - Mở /game.html?deck=<id bộ từ>  -> chỉ dùng từ của bộ đó
+ * - Mở /game.html?deck=all (hoặc không có ?deck) -> dùng TẤT CẢ bộ từ
+ * - Dữ liệu lấy từ decks.json + các file trong folder data/ của app Flashcard,
+ *   kèm cả bộ từ đã sửa/tạo trong trình duyệt (localStorage của app).
+ * ======================================================================= */
+
+// ====== Cấu hình có thể chỉnh ======
+const PAIRS_PER_ROUND = 15;   // số cặp mỗi ván (15 cặp -> 30 ô)
+const GRID_COLS       = 5;    // số cột của lưới
+const MAX_TEXT_LEN    = 60;   // bỏ qua các thẻ có chữ quá dài (câu, đoạn văn)
+const WRONG_DELAY_MS  = 600;  // thời gian hiện hiệu ứng sai
+const CORRECT_DELAY_MS = 450; // thời gian hiện hiệu ứng đúng trước khi biến mất
+const NEXT_ROUND_MS   = 1500; // chờ trước khi sang ván mới
+
+// ====== Danh sách từ vựng MẪU (dự phòng khi không tải được dữ liệu) ======
+// Bạn có thể tự thêm/sửa các cặp từ ở đây.
+const SAMPLE_VOCABULARY = [
+  { word: "apple", meaning: "quả táo" },
+  { word: "book", meaning: "quyển sách" },
+  { word: "water", meaning: "nước" },
+  { word: "friend", meaning: "bạn bè" },
+  { word: "school", meaning: "trường học" },
+  { word: "happy", meaning: "hạnh phúc" },
+  { word: "beautiful", meaning: "đẹp" },
+  { word: "house", meaning: "ngôi nhà" },
+  { word: "dog", meaning: "con chó" },
+  { word: "cat", meaning: "con mèo" },
+  { word: "sun", meaning: "mặt trời" },
+  { word: "moon", meaning: "mặt trăng" },
+  { word: "star", meaning: "ngôi sao" },
+  { word: "tree", meaning: "cái cây" },
+  { word: "flower", meaning: "bông hoa" },
+  { word: "car", meaning: "xe hơi" },
+  { word: "teacher", meaning: "giáo viên" },
+  { word: "student", meaning: "học sinh" },
+  { word: "morning", meaning: "buổi sáng" },
+  { word: "night", meaning: "buổi tối" },
+  { word: "food", meaning: "thức ăn" },
+  { word: "milk", meaning: "sữa" },
+  { word: "rice", meaning: "cơm, gạo" },
+  { word: "chicken", meaning: "con gà" },
+  { word: "fish", meaning: "con cá" },
+  { word: "bird", meaning: "con chim" },
+  { word: "mountain", meaning: "ngọn núi" },
+  { word: "river", meaning: "dòng sông" },
+  { word: "ocean", meaning: "đại dương" },
+  { word: "rain", meaning: "mưa" },
+  { word: "cloud", meaning: "đám mây" },
+  { word: "wind", meaning: "gió" },
+];
+
+// ====== DOM ======
+const grid        = document.getElementById("grid");
+const roundNumEl  = document.getElementById("roundNum");
+const pairsLeftEl = document.getElementById("pairsLeft");
+const deckNameEl  = document.getElementById("deckName");
+const doneOverlay = document.getElementById("doneOverlay");
+const exitBtn     = document.getElementById("exitBtn");
+
+// ====== Trạng thái trò chơi ======
+let vocabulary = [];        // toàn bộ cặp từ: { id, word, meaning }
+let round = 0;              // số ván
+let remaining = 0;          // số cặp còn lại trong ván
+let selectedTile = null;    // ô đang được chọn (phần tử DOM)
+let locked = false;         // true = đang chạy hiệu ứng, chặn click
+let prevOrderKey = "";      // "chữ ký" thứ tự ván trước, tránh lặp y hệt
+
+// ====== Nhận diện tiếng Anh (chuỗi không có ký tự tiếng Việt) ======
+function isEnglish(text) {
+  if (!text) return false;
+  const vietnamese =
+    /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i;
+  return !vietnamese.test(text);
+}
+
+// ====== Đọc localStorage của app Flashcard (bộ đã sửa / tự tạo) ======
+function loadStore() {
+  try {
+    const s = JSON.parse(localStorage.getItem("flashcard_store_v1"));
+    if (s && typeof s === "object")
+      return { custom: s.custom || [], overrides: s.overrides || {} };
+  } catch {}
+  return { custom: [], overrides: {} };
+}
+
+// ====== Tải dữ liệu từ vựng theo tham số ?deck= ======
+async function loadVocabulary() {
+  const params = new URLSearchParams(location.search);
+  const deckId = params.get("deck") || "all";
+  const store = loadStore();
+
+  // 1) Đọc manifest decks.json
+  let decks = [];
+  try {
+    const res = await fetch("/decks.json", { cache: "no-store" });
+    if (res.ok) decks = (await res.json()).filter((d) => d && d.id && d.file);
+  } catch {}
+
+  // 2) Chọn các bộ cần dùng
+  let wanted;
+  if (deckId === "all") {
+    wanted = decks.slice();
+    // thêm cả các bộ tự tạo trong trình duyệt (chưa commit lên git)
+    const ids = new Set(decks.map((d) => d.id));
+    store.custom.forEach((d) => {
+      if (!ids.has(d.id)) wanted.push({ id: d.id, name: d.name, cards: d.cards });
+    });
+    deckNameEl.textContent = "🌐 Tất cả bộ từ";
+  } else {
+    wanted = decks.filter((d) => d.id === deckId);
+    if (!wanted.length) {
+      const c = store.custom.find((d) => d.id === deckId);
+      if (c) wanted = [{ id: c.id, name: c.name, cards: c.cards }];
+    }
+    deckNameEl.textContent = wanted.length ? "📚 " + (wanted[0].name || deckId) : "";
+  }
+
+  // 3) Tải thẻ của từng bộ (ưu tiên bản đã sửa trong localStorage)
+  const allCards = [];
+  for (const d of wanted) {
+    let cards = null;
+    const ov = store.overrides[d.id];
+    if (ov && Array.isArray(ov.cards)) cards = ov.cards;
+    else if (Array.isArray(d.cards)) cards = d.cards;
+    else {
+      try {
+        const res = await fetch("/" + d.file, { cache: "no-store" });
+        if (res.ok) cards = await res.json();
+      } catch {}
+    }
+    if (Array.isArray(cards)) allCards.push(...cards);
+  }
+
+  // 4) Chuyển thẻ {front, back} thành cặp {id, word, meaning}.
+  //    Chỉ giữ thẻ: mặt trước là tiếng Anh + cả 2 mặt đủ ngắn để hiện trong ô.
+  const seen = new Set(); // loại từ trùng nhau giữa các bộ
+  const pairs = [];
+  allCards.forEach((c) => {
+    const word = (c.front || "").trim();
+    const meaning = (c.back || "").trim();
+    if (!word || !meaning) return;
+    if (!isEnglish(word)) return;
+    if (word.length > MAX_TEXT_LEN || meaning.length > MAX_TEXT_LEN) return;
+    const key = word.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    pairs.push({ id: pairs.length + 1, word, meaning });
+  });
+
+  // 5) Không đủ dữ liệu -> dùng danh sách mẫu
+  if (pairs.length < 4) {
+    deckNameEl.textContent = "📚 Từ vựng mẫu";
+    return SAMPLE_VOCABULARY.map((p, i) => ({ id: i + 1, ...p }));
+  }
+  return pairs;
+}
+
+// ====== Tiện ích: trộn mảng (Fisher–Yates) ======
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ====== Phát âm tiếng Anh ======
+// Ưu tiên proxy cùng tên miền /api/tts (đã có sẵn trong project),
+// dự phòng Google TTS rồi Web Speech API.
+let ttsAudio = null;
+const TTS_SOURCES = [
+  (t) => "/api/tts?tl=en&text=" + encodeURIComponent(t),
+  (t) =>
+    "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q=" +
+    encodeURIComponent(t),
+];
+function speakWithSynthesis(text) {
+  if (!("speechSynthesis" in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "en-US";
+    u.rate = 0.95;
+    window.speechSynthesis.speak(u);
+  } catch {}
+}
+function playTts(text, i) {
+  i = i || 0;
+  if (i >= TTS_SOURCES.length) { speakWithSynthesis(text); return; }
+  try {
+    if (!ttsAudio) { ttsAudio = new Audio(); ttsAudio.preload = "auto"; }
+    let advanced = false;
+    const next = () => { if (!advanced) { advanced = true; playTts(text, i + 1); } };
+    ttsAudio.onerror = next;
+    ttsAudio.src = TTS_SOURCES[i](text);
+    const p = ttsAudio.play();
+    if (p && typeof p.catch === "function") p.catch(next);
+  } catch { playTts(text, i + 1); }
+}
+function speak(text) {
+  if (!text) return;
+  try { if (ttsAudio) { ttsAudio.pause(); ttsAudio.currentTime = 0; } } catch {}
+  playTts(text, 0);
+}
+
+// ====== Thu nhỏ chữ nếu nội dung tràn ô ======
+function fitTile(tile) {
+  const MIN_FONT = 8;
+  let size = parseFloat(getComputedStyle(tile).fontSize);
+  while (
+    size > MIN_FONT &&
+    (tile.scrollHeight > tile.clientHeight || tile.scrollWidth > tile.clientWidth)
+  ) {
+    size -= 0.5;
+    tile.style.fontSize = size + "px";
+  }
+}
+function fitAllTiles() {
+  grid.querySelectorAll(".tile").forEach((t) => {
+    t.style.fontSize = ""; // reset về clamp() rồi mới thu nhỏ
+    fitTile(t);
+  });
+}
+
+// ====== Bắt đầu một ván mới ======
+function startRound() {
+  round++;
+  roundNumEl.textContent = round;
+  selectedTile = null;
+  locked = false;
+
+  // Chọn ngẫu nhiên tối đa 15 cặp từ danh sách
+  const pairCount = Math.min(PAIRS_PER_ROUND, vocabulary.length);
+  const chosen = shuffle(vocabulary).slice(0, pairCount);
+  remaining = pairCount;
+  pairsLeftEl.textContent = remaining;
+
+  // Tạo 2 ô cho mỗi cặp: 1 ô từ + 1 ô nghĩa
+  const tiles = [];
+  chosen.forEach((p) => {
+    tiles.push({ id: p.id, type: "word", text: p.word });
+    tiles.push({ id: p.id, type: "meaning", text: p.meaning });
+  });
+
+  // Trộn vị trí, tránh ván mới trùng y hệt thứ tự ván trước
+  let order = shuffle(tiles);
+  let key = order.map((t) => t.id + t.type).join("|");
+  let tries = 0;
+  while (key === prevOrderKey && tries < 10) {
+    order = shuffle(tiles);
+    key = order.map((t) => t.id + t.type).join("|");
+    tries++;
+  }
+  prevOrderKey = key;
+
+  // Vẽ lưới
+  grid.innerHTML = "";
+  grid.style.gridTemplateColumns = `repeat(${GRID_COLS}, 1fr)`;
+  order.forEach((t) => {
+    const el = document.createElement("button");
+    el.type = "button";
+    el.className = "tile " + t.type;      // .word hoặc .meaning
+    el.dataset.id = t.id;
+    el.dataset.type = t.type;
+    el.textContent = t.text;
+    el.addEventListener("click", () => onTileClick(el));
+    grid.appendChild(el);
+  });
+
+  // Thu nhỏ chữ sau khi trình duyệt đã dựng layout
+  requestAnimationFrame(fitAllTiles);
+}
+
+// ====== Xử lý click vào ô ======
+function onTileClick(tile) {
+  if (locked) return;                       // đang chạy hiệu ứng -> bỏ qua
+  if (tile.classList.contains("gone")) return;
+
+  // Click lại chính ô đang chọn -> bỏ chọn
+  if (tile === selectedTile) {
+    tile.classList.remove("selected");
+    selectedTile = null;
+    return;
+  }
+
+  // Chưa có ô nào được chọn -> chọn ô này
+  if (!selectedTile) {
+    selectedTile = tile;
+    tile.classList.add("selected");
+    return;
+  }
+
+  // Đã có ô thứ nhất -> kiểm tra cặp
+  const first = selectedTile;
+  const second = tile;
+  selectedTile = null;
+
+  const isMatch =
+    first.dataset.id === second.dataset.id &&
+    first.dataset.type !== second.dataset.type; // phải khác loại (từ + nghĩa)
+
+  if (isMatch) {
+    // ----- CẶP ĐÚNG -----
+    locked = true;
+    // Phát âm từ tiếng Anh (ngay trong cử chỉ click để không bị chặn autoplay)
+    const wordTile = first.dataset.type === "word" ? first : second;
+    speak(wordTile.textContent);
+
+    first.classList.remove("selected");
+    first.classList.add("correct");
+    second.classList.add("correct");
+
+    setTimeout(() => {
+      first.classList.add("gone");    // biến mất, không click lại được
+      second.classList.add("gone");
+      first.classList.remove("correct");
+      second.classList.remove("correct");
+      remaining--;
+      pairsLeftEl.textContent = remaining;
+      locked = false;
+
+      // Hết cặp -> hoàn thành ván
+      if (remaining === 0) {
+        doneOverlay.classList.add("show");
+        setTimeout(() => {
+          doneOverlay.classList.remove("show");
+          startRound();               // tự động sang ván mới
+        }, NEXT_ROUND_MS);
+      }
+    }, CORRECT_DELAY_MS);
+  } else {
+    // ----- CẶP SAI (kể cả 2 ô cùng loại) -----
+    locked = true;
+    first.classList.remove("selected");
+    first.classList.add("wrong");
+    second.classList.add("wrong");
+
+    setTimeout(() => {
+      first.classList.remove("wrong");
+      second.classList.remove("wrong");
+      locked = false;                 // cho phép chọn lại
+    }, WRONG_DELAY_MS);
+  }
+}
+
+// ====== Nút thoát: quay về trang Flashcard chính ======
+exitBtn.addEventListener("click", () => {
+  location.href = "/";
+});
+
+// Tính lại cỡ chữ khi xoay máy / đổi kích thước cửa sổ
+window.addEventListener("resize", fitAllTiles);
+
+// ====== Khởi động ======
+(async function init() {
+  vocabulary = await loadVocabulary();
+  startRound();
+})();
+</script>
+</body>
+</html>

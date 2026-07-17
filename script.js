@@ -1,9 +1,10 @@
 // ====== Cấu hình bộ từ vựng ======
 // Danh sách mặc định. Nếu repo có file decks.json thì sẽ ưu tiên dùng file đó
 // (để các bộ từ tạo trên web + commit lên git hiển thị cho mọi người).
+// Lưu ý: các file dữ liệu từ vựng đặt trong folder data/ cho dễ quản lý.
 const DEFAULT_DECKS = [
-  { id: "data1", name: "Data 1", file: "data1.json", emoji: "🟦" },
-  { id: "data2", name: "Data 2", file: "data2.json", emoji: "🟩" },
+  { id: "data1", name: "Data 1", file: "data/data1.json", emoji: "🟦" },
+  { id: "data2", name: "Data 2", file: "data/data2.json", emoji: "🟩" },
 ];
 let DECKS = DEFAULT_DECKS.slice();
 
@@ -184,7 +185,7 @@ function getAllDecks() {
     id: d.id,
     name: d.name,
     emoji: d.emoji || "🗂️",
-    file: d.file || d.id + ".json",
+    file: d.file || "data/" + d.id + ".json",
     builtin: false,
     count: d.cards.length,
   }));
@@ -249,7 +250,7 @@ function renderHome() {
 
     const btn = document.createElement("button");
     btn.className =
-      "w-full text-left p-5 pr-12 rounded-2xl bg-white shadow hover:shadow-lg hover:-translate-y-0.5 active:scale-95 transition flex items-center gap-3";
+      "w-full text-left p-5 pr-20 rounded-2xl bg-white shadow hover:shadow-lg hover:-translate-y-0.5 active:scale-95 transition flex items-center gap-3";
     const subtitle = deck.builtin
       ? deck.file + (deck.count != null ? ` · đã sửa (${deck.count})` : "")
       : `${deck.count} thẻ`;
@@ -276,7 +277,20 @@ function renderHome() {
       openEditor(deck);
     });
 
+    // Nút chơi game "Ghép từ với nghĩa" cho riêng bộ này
+    const play = document.createElement("button");
+    play.className =
+      "absolute top-2 right-10 p-2 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition";
+    play.title = "Chơi game ghép từ";
+    play.setAttribute("aria-label", "Chơi game ghép từ");
+    play.textContent = "🎮";
+    play.addEventListener("click", (e) => {
+      e.stopPropagation();
+      location.href = "/game.html?deck=" + encodeURIComponent(deck.id);
+    });
+
     wrap.appendChild(btn);
+    wrap.appendChild(play);
     wrap.appendChild(edit);
     deckList.appendChild(wrap);
   });
@@ -519,7 +533,8 @@ function persistLocal() {
     };
   } else if (editingDeck) {
     const d = store.custom.find((x) => x.id === editingDeck.id);
-    const file = (d && d.file) || editingDeck.file || editingDeck.id + ".json";
+    const file =
+      (d && d.file) || editingDeck.file || "data/" + editingDeck.id + ".json";
     if (d) {
       d.name = name;
       d.emoji = emoji;
@@ -529,7 +544,7 @@ function persistLocal() {
     deck = { id: editingDeck.id, name, emoji, file, cards: cleaned };
   } else {
     const id = uniqueId(slugify(name));
-    const file = id + ".json";
+    const file = "data/" + id + ".json"; // bộ tự tạo cũng lưu vào folder data/
     store.custom.push({ id, name, emoji, file, cards: cleaned });
     deck = { id, name, emoji, file, cards: cleaned };
   }

@@ -3,30 +3,30 @@
     "id": "data1",
     "name": "Data 1",
     "emoji": "🟦",
-    "file": "data1.json"
+    "file": "data/data1.json"
   },
   {
     "id": "data2",
     "name": "Data 2",
     "emoji": "🟩",
-    "file": "data2.json"
+    "file": "data/data2.json"
   },
   {
     "id": "data3",
     "name": "Data3",
     "emoji": "🗂️",
-    "file": "data3.json"
+    "file": "data/data3.json"
   },
   {
     "id": "tu-loai",
     "name": "Từ loại",
     "emoji": "😉",
-    "file": "tu-loai.json"
+    "file": "data/tu-loai.json"
   },
   {
     "id": "toeic-ex1-2",
     "name": "Toeic ex1",
     "emoji": "🗂️",
-    "file": "toeic-ex1-2.json"
+    "file": "data/toeic-ex1-2.json"
   }
 ]
