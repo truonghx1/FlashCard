@@ -76,8 +76,8 @@
     justify-content: center;                 /* căn giữa ngang */
     text-align: center;
     padding: clamp(2px, 0.8vw, 8px);
-    border-radius: clamp(6px, 1.2vw, 12px);
-    border: 2px solid transparent;
+    border-radius: 0;                        /* góc vuông giống bảng */
+    border: 1px solid #d1d5db;               /* viền xám nhạt giống bảng */
     cursor: pointer;
     user-select: none;
     overflow: hidden;
@@ -87,23 +87,25 @@
     /* cỡ chữ co giãn theo màn hình, JS sẽ thu nhỏ thêm nếu chữ dài */
     font-size: clamp(10px, 2.2vw, 17px);
     font-weight: 500;
-    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    box-shadow: none;
     transition: transform .12s, box-shadow .12s, background .15s, border-color .15s, opacity .3s;
     min-width: 0;
     min-height: 0;
+    background: #fff;                        /* nền trắng cho tất cả ô */
   }
-  /* Hai loại ô khác nhau vừa đủ để đẹp, không quá lộ liễu */
-  .tile.word    { background: #eef2ff; }     /* ô từ tiếng Anh */
-  .tile.meaning { background: #f0fdfa; }     /* ô nghĩa tiếng Việt */
+  /* Từ tiếng Anh: chữ đỏ, in đậm */
+  .tile.word    { color: #dc2626; font-weight: 700; }
+  /* Nghĩa tiếng Việt: chữ xanh dương */
+  .tile.meaning { color: #2563eb; }
 
   @media (hover: hover) {
-    .tile:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,.12); }
+    .tile:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,.12); background: #f9fafb; }
   }
 
   /* Ô đang được chọn */
   .tile.selected {
     border-color: #6366f1;
-    background: #c7d2fe;
+    background: #e0e7ff;
     transform: scale(1.04);
     box-shadow: 0 4px 12px rgba(99,102,241,.35);
   }
