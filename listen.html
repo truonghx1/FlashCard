@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nghe và chọn từ</title>
+<style>
+  /* ====== Reset & nền ====== */
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: #f1f5f9;
+    color: #1e293b;
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  /* ====== Header ====== */
+  header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 12px;
+  }
+  .info {
+    display: flex;
+    gap: 12px;
+    font-size: clamp(12px, 2.5vw, 15px);
+    color: #475569;
+    min-width: 0;
+  }
+  .info b { color: #4f46e5; }
+  #deckName {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 40vw;
+  }
+  #exitBtn {
+    flex: 0 0 auto;
+    border: none;
+    background: #fff;
+    color: #64748b;
+    padding: 6px 14px;
+    border-radius: 10px;
+    font-size: clamp(12px, 2.5vw, 14px);
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0,0,0,.12);
+    cursor: pointer;
+    transition: background .15s, color .15s;
+  }
+  #exitBtn:hover { background: #fee2e2; color: #dc2626; }
+
+  /* ====== Audio player bar ====== */
+  .audio-bar {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: clamp(6px, 1.5vw, 12px);
+    padding: 10px clamp(10px, 2vw, 20px);
+    background: #fff;
+    border-bottom: 1px solid #e2e8f0;
+    margin: 0 0 4px;
+  }
+  .audio-bar button {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 50%;
+    transition: color .15s, background .15s;
+  }
+  .audio-bar button:hover { color: #4f46e5; background: #eef2ff; }
+  .audio-bar button svg { width: clamp(20px, 4vw, 28px); height: clamp(20px, 4vw, 28px); }
+
+  /* Progress bar */
+  .progress-wrap {
+    flex: 1;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #eab308, #22c55e);
+    border-radius: 3px;
+    width: 0%;
+    transition: width .1s linear;
+  }
+  .progress-dot {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 14px;
+    height: 14px;
+    background: #fff;
+    border: 2px solid #94a3b8;
+    border-radius: 50%;
+    left: 0%;
+    transition: left .1s linear;
+  }
+
+  .time-display {
+    font-size: clamp(11px, 2vw, 13px);
+    color: #64748b;
+    font-variant-numeric: tabular-nums;
+    min-width: 40px;
+    text-align: center;
+  }
+
+  /* Volume control */
+  .volume-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .volume-wrap input[type="range"] {
+    width: clamp(40px, 8vw, 80px);
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: linear-gradient(90deg, #3b82f6 var(--vol-pct, 100%), #e2e8f0 var(--vol-pct, 100%));
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  .volume-wrap input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px; height: 12px;
+    background: #3b82f6;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .volume-wrap input[type="range"]::-moz-range-thumb {
+    width: 12px; height: 12px;
+    background: #3b82f6;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+  }
+
+  /* Settings button */
+  .settings-btn {
+    font-size: clamp(14px, 2.5vw, 18px);
+    color: #94a3b8;
+  }
+  .settings-btn:hover { color: #64748b !important; }
+
+  /* ====== Grid 3x3 ====== */
+  #grid {
+    flex: 1 1 auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: 1fr;
+    gap: 0;
+    padding: 0 10px 10px;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    min-height: 0;
+  }
+
+  /* ====== Tile (card) ====== */
+  .tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: clamp(6px, 1.5vw, 14px);
+    border: 1px solid #d1d5db;
+    cursor: pointer;
+    user-select: none;
+    overflow: hidden;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    line-height: 1.25;
+    background: #fff;
+    transition: transform .12s, background .15s, border-color .15s, opacity .3s;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .tile:hover { background: #f9fafb; }
+
+  .tile .word {
+    color: #dc2626;
+    font-weight: 700;
+    font-size: clamp(13px, 2.8vw, 20px);
+    margin-bottom: 2px;
+  }
+  .tile .meaning {
+    color: #2563eb;
+    font-size: clamp(10px, 2vw, 14px);
+    line-height: 1.2;
+  }
+
+  /* Đúng: highlight xanh lá */
+  .tile.correct {
+    background: #dcfce7 !important;
+    border-color: #22c55e;
+  }
+  .tile.correct .word { color: #15803d; }
+  .tile.correct .meaning { color: #166534; }
+
+  /* Sai: highlight đỏ + rung */
+  .tile.wrong {
+    background: #fee2e2 !important;
+    border-color: #ef4444;
+    animation: shake .45s;
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-5px); }
+    40% { transform: translateX(5px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+
+  /* ====== Score bar (bottom) ====== */
+  .score-bar {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 8px 12px;
+    background: #fff;
+    border-top: 1px solid #e2e8f0;
+    font-size: clamp(12px, 2.5vw, 15px);
+    color: #475569;
+  }
+  .score-bar .correct-count { color: #16a34a; font-weight: 700; }
+  .score-bar .wrong-count { color: #dc2626; font-weight: 700; }
+  .score-bar .streak { color: #eab308; font-weight: 700; }
+
+  /* ====== Settings panel overlay ====== */
+  #settingsOverlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(241,245,249,.75);
+    z-index: 50;
+  }
+  #settingsOverlay.show { display: flex; }
+  .settings-panel {
+    background: #fff;
+    padding: 24px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.15);
+    width: min(360px, 90vw);
+    animation: pop .3s;
+  }
+  .settings-panel h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: #1e293b;
+  }
+  .settings-panel label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 14px;
+    color: #475569;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .settings-panel select, .settings-panel input[type="number"] {
+    padding: 4px 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+  }
+  .settings-panel select:focus, .settings-panel input[type="number"]:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99,102,241,.2);
+  }
+  .settings-panel .close-settings {
+    margin-top: 16px;
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    background: #4f46e5;
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .settings-panel .close-settings:hover { background: #4338ca; }
+
+  @keyframes pop {
+    0% { transform: scale(.6); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* ====== Responsive ====== */
+  @media (max-width: 380px) {
+    #grid { padding: 0 4px 4px; }
+    .tile { padding: 4px; }
+    header { padding: 6px 8px; }
+    .audio-bar { padding: 8px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="info">
+      <span>Câu <b id="questionNum">1</b></span>
+      <span>Đúng: <b id="correctCount" class="correct-count" style="color:#16a34a">0</b></span>
+      <span>Sai: <b id="wrongCount" class="wrong-count" style="color:#dc2626">0</b></span>
+      <span id="deckName"></span>
+    </div>
+    <button id="exitBtn" type="button">✕ Thoát</button>
+  </header>
+
+  <!-- Audio player bar -->
+  <div class="audio-bar">
+    <button id="playBtn" type="button" title="Phát lại">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M8 5v14l11-7z"/>
+      </svg>
+    </button>
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-fill" id="progressFill"></div>
+      <div class="progress-dot" id="progressDot"></div>
+    </div>
+    <span class="time-display" id="timeDisplay">00:00</span>
+    <div class="volume-wrap">
+      <button id="muteBtn" type="button" title="Tắt/bật tiếng">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072M19 5a9 9 0 010 14M5 9v6h4l5 5V4L9 9H5z" />
+        </svg>
+      </button>
+      <input type="range" id="volumeSlider" min="0" max="100" value="100" style="--vol-pct:100%" />
+    </div>
+    <button id="settingsBtn" type="button" class="settings-btn" title="Cài đặt">
+      ⚙
+    </button>
+  </div>
+
+  <!-- Grid 3x3 -->
+  <main id="grid"></main>
+
+  <!-- Settings overlay -->
+  <div id="settingsOverlay">
+    <div class="settings-panel">
+      <h3>⚙ Cài đặt</h3>
+      <label>
+        Số lựa chọn
+        <select id="optCountSelect">
+          <option value="4">4 (2×2)</option>
+          <option value="6">6 (3×2)</option>
+          <option value="9" selected>9 (3×3)</option>
+        </select>
+      </label>
+      <label>
+        Tự động phát lại sau
+        <select id="autoReplaySelect">
+          <option value="0">Không tự phát lại</option>
+          <option value="3" selected>3 giây</option>
+          <option value="5">5 giây</option>
+          <option value="8">8 giây</option>
+        </select>
+      </label>
+      <label>
+        Tốc độ phát
+        <select id="speedSelect">
+          <option value="0.7">Chậm (0.7x)</option>
+          <option value="1" selected>Bình thường (1x)</option>
+          <option value="1.2">Nhanh (1.2x)</option>
+        </select>
+      </label>
+      <button class="close-settings" id="closeSettingsBtn">Đóng</button>
+    </div>
+  </div>
+
+<script>
+"use strict";
+/* =========================================================================
+ * NGHE VÀ CHỌN TỪ
+ * - Mở /listen.html?deck=<id>  -> dùng từ của bộ đó
+ * - Mở /listen.html?deck=all   -> dùng TẤT CẢ bộ từ
+ * ======================================================================= */
+
+// ====== Cấu hình ======
+const MAX_TEXT_LEN  = 120;
+const NEXT_DELAY_MS = 1200;    // chờ trước khi chuyển câu mới
+
+// ====== Dữ liệu mẫu dự phòng ======
+const SAMPLE_VOCABULARY = [
+  { word: "apple", meaning: "quả táo" },
+  { word: "book", meaning: "quyển sách" },
+  { word: "water", meaning: "nước" },
+  { word: "friend", meaning: "bạn bè" },
+  { word: "school", meaning: "trường học" },
+  { word: "happy", meaning: "hạnh phúc" },
+  { word: "beautiful", meaning: "đẹp" },
+  { word: "house", meaning: "ngôi nhà" },
+  { word: "dog", meaning: "con chó" },
+  { word: "cat", meaning: "con mèo" },
+  { word: "sun", meaning: "mặt trời" },
+  { word: "moon", meaning: "mặt trăng" },
+  { word: "star", meaning: "ngôi sao" },
+  { word: "tree", meaning: "cái cây" },
+  { word: "flower", meaning: "bông hoa" },
+  { word: "car", meaning: "xe hơi" },
+  { word: "teacher", meaning: "giáo viên" },
+  { word: "student", meaning: "học sinh" },
+  { word: "morning", meaning: "buổi sáng" },
+  { word: "night", meaning: "buổi tối" },
+];
+
+// ====== DOM ======
+const grid            = document.getElementById("grid");
+const questionNumEl   = document.getElementById("questionNum");
+const correctCountEl  = document.getElementById("correctCount");
+const wrongCountEl    = document.getElementById("wrongCount");
+const deckNameEl      = document.getElementById("deckName");
+const exitBtn         = document.getElementById("exitBtn");
+const playBtn         = document.getElementById("playBtn");
+const progressFill    = document.getElementById("progressFill");
+const progressDot     = document.getElementById("progressDot");
+const timeDisplay     = document.getElementById("timeDisplay");
+const muteBtn         = document.getElementById("muteBtn");
+const volumeSlider    = document.getElementById("volumeSlider");
+const settingsBtn     = document.getElementById("settingsBtn");
+const settingsOverlay = document.getElementById("settingsOverlay");
+const closeSettingsBtn= document.getElementById("closeSettingsBtn");
+const optCountSelect  = document.getElementById("optCountSelect");
+const autoReplaySelect= document.getElementById("autoReplaySelect");
+const speedSelect     = document.getElementById("speedSelect");
+
+// ====== State ======
+let vocabulary = [];
+let questionNum = 0;
+let correctTotal = 0;
+let wrongTotal = 0;
+let currentAnswer = null;   // { word, meaning }
+let locked = false;
+let ttsAudio = null;
+let autoReplayTimer = null;
+let isMuted = false;
+
+// ====== Nhận diện tiếng Anh ======
+function isEnglish(text) {
+  if (!text) return false;
+  const vietnamese =
+    /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i;
+  return !vietnamese.test(text);
+}
+
+// ====== localStorage ======
+function loadStore() {
+  try {
+    const s = JSON.parse(localStorage.getItem("flashcard_store_v1"));
+    if (s && typeof s === "object")
+      return { custom: s.custom || [], overrides: s.overrides || {} };
+  } catch {}
+  return { custom: [], overrides: {} };
+}
+
+// ====== Tải dữ liệu từ vựng ======
+async function loadVocabulary() {
+  const params = new URLSearchParams(location.search);
+  const deckId = params.get("deck") || "all";
+  const store = loadStore();
+
+  let decks = [];
+  try {
+    const res = await fetch("/decks.json", { cache: "no-store" });
+    if (res.ok) decks = (await res.json()).filter((d) => d && d.id && d.file);
+  } catch {}
+
+  let wanted;
+  if (deckId === "all") {
+    wanted = decks.slice();
+    const ids = new Set(decks.map((d) => d.id));
+    store.custom.forEach((d) => {
+      if (!ids.has(d.id)) wanted.push({ id: d.id, name: d.name, cards: d.cards });
+    });
+    deckNameEl.textContent = "🌐 Tất cả bộ từ";
+  } else {
+    wanted = decks.filter((d) => d.id === deckId);
+    if (!wanted.length) {
+      const c = store.custom.find((d) => d.id === deckId);
+      if (c) wanted = [{ id: c.id, name: c.name, cards: c.cards }];
+    }
+    deckNameEl.textContent = wanted.length ? "📚 " + (wanted[0].name || deckId) : "";
+  }
+
+  const allCards = [];
+  for (const d of wanted) {
+    let cards = null;
+    const ov = store.overrides[d.id];
+    if (ov && Array.isArray(ov.cards)) cards = ov.cards;
+    else if (Array.isArray(d.cards)) cards = d.cards;
+    else {
+      try {
+        const res = await fetch("/" + d.file, { cache: "no-store" });
+        if (res.ok) cards = await res.json();
+      } catch {}
+    }
+    if (Array.isArray(cards)) allCards.push(...cards);
+  }
+
+  const seen = new Set();
+  const pairs = [];
+  allCards.forEach((c) => {
+    const word = (c.front || "").trim();
+    const meaning = (c.back || "").trim();
+    if (!word || !meaning) return;
+    if (!isEnglish(word)) return;
+    if (word.length > MAX_TEXT_LEN || meaning.length > MAX_TEXT_LEN) return;
+    const key = word.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    pairs.push({ word, meaning });
+  });
+
+  if (pairs.length < 4) {
+    deckNameEl.textContent = "📚 Từ vựng mẫu";
+    return SAMPLE_VOCABULARY.slice();
+  }
+  return pairs;
+}
+
+// ====== Tiện ích ======
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function formatTime(sec) {
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+}
+
+// ====== TTS Audio ======
+const TTS_SOURCES = [
+  (t) => "/api/tts?tl=en&text=" + encodeURIComponent(t),
+  (t) =>
+    "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q=" +
+    encodeURIComponent(t),
+];
+
+function stopSpeaking() {
+  clearAutoReplay();
+  if ("speechSynthesis" in window) {
+    try { window.speechSynthesis.cancel(); } catch {}
+  }
+  if (ttsAudio) {
+    try { ttsAudio.pause(); ttsAudio.currentTime = 0; } catch {}
+  }
+  resetProgress();
+}
+
+function speakWithSynthesis(text) {
+  if (!("speechSynthesis" in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "en-US";
+    u.rate = parseFloat(speedSelect.value) || 1;
+    u.volume = isMuted ? 0 : (volumeSlider.value / 100);
+    window.speechSynthesis.speak(u);
+  } catch {}
+}
+
+function playTts(text, i) {
+  i = i || 0;
+  if (i >= TTS_SOURCES.length) { speakWithSynthesis(text); return; }
+  try {
+    if (!ttsAudio) {
+      ttsAudio = new Audio();
+      ttsAudio.preload = "auto";
+      // Update progress bar
+      ttsAudio.addEventListener("timeupdate", updateProgress);
+      ttsAudio.addEventListener("ended", onAudioEnded);
+    }
+    let advanced = false;
+    const next = () => { if (!advanced) { advanced = true; playTts(text, i + 1); } };
+    ttsAudio.onerror = next;
+    ttsAudio.playbackRate = parseFloat(speedSelect.value) || 1;
+    ttsAudio.volume = isMuted ? 0 : (volumeSlider.value / 100);
+    ttsAudio.src = TTS_SOURCES[i](text);
+    const p = ttsAudio.play();
+    if (p && typeof p.catch === "function") p.catch(next);
+  } catch { playTts(text, i + 1); }
+}
+
+function speak(text) {
+  if (!text) return;
+  stopSpeaking();
+  playTts(text, 0);
+}
+
+function updateProgress() {
+  if (!ttsAudio || !ttsAudio.duration) return;
+  const pct = (ttsAudio.currentTime / ttsAudio.duration) * 100;
+  progressFill.style.width = pct + "%";
+  progressDot.style.left = pct + "%";
+  timeDisplay.textContent = formatTime(ttsAudio.currentTime);
+}
+
+function resetProgress() {
+  progressFill.style.width = "0%";
+  progressDot.style.left = "0%";
+  timeDisplay.textContent = "00:00";
+}
+
+function onAudioEnded() {
+  scheduleAutoReplay();
+}
+
+function clearAutoReplay() {
+  if (autoReplayTimer) {
+    clearTimeout(autoReplayTimer);
+    autoReplayTimer = null;
+  }
+}
+
+function scheduleAutoReplay() {
+  clearAutoReplay();
+  const delay = parseInt(autoReplaySelect.value) || 0;
+  if (delay > 0 && currentAnswer && !locked) {
+    autoReplayTimer = setTimeout(() => {
+      if (currentAnswer && !locked) {
+        speak(currentAnswer.word);
+      }
+    }, delay * 1000);
+  }
+}
+
+// ====== Grid layout ======
+function getGridConfig() {
+  const count = parseInt(optCountSelect.value) || 9;
+  if (count === 4)  return { cols: 2, rows: 2, total: 4 };
+  if (count === 6)  return { cols: 3, rows: 2, total: 6 };
+  return { cols: 3, rows: 3, total: 9 };
+}
+
+// ====== Bắt đầu câu hỏi mới ======
+function nextQuestion() {
+  locked = false;
+  questionNum++;
+  questionNumEl.textContent = questionNum;
+
+  const config = getGridConfig();
+  const optionCount = Math.min(config.total, vocabulary.length);
+
+  // Chọn đáp án đúng ngẫu nhiên
+  const shuffled = shuffle(vocabulary);
+  currentAnswer = shuffled[0];
+
+  // Chọn các lựa chọn sai (khác đáp án đúng)
+  const others = shuffled.filter(p => p.word !== currentAnswer.word).slice(0, optionCount - 1);
+  const options = shuffle([currentAnswer, ...others]);
+
+  // Vẽ grid
+  grid.innerHTML = "";
+  grid.style.gridTemplateColumns = `repeat(${config.cols}, 1fr)`;
+
+  options.forEach((opt) => {
+    const el = document.createElement("button");
+    el.type = "button";
+    el.className = "tile";
+    el.dataset.word = opt.word;
+    el.innerHTML = `
+      <span class="word">${escapeHtml(opt.word)}</span>
+      <span class="meaning">(${escapeHtml(opt.meaning)})</span>
+    `;
+    el.addEventListener("click", () => onTileClick(el, opt));
+    grid.appendChild(el);
+  });
+
+  // Auto-fit text
+  requestAnimationFrame(fitAllTiles);
+
+  // Phát âm từ đúng
+  setTimeout(() => speak(currentAnswer.word), 300);
+}
+
+// ====== Xử lý click ======
+function onTileClick(tile, opt) {
+  if (locked) return;
+
+  if (opt.word === currentAnswer.word) {
+    // ĐÚNG
+    locked = true;
+    correctTotal++;
+    correctCountEl.textContent = correctTotal;
+    tile.classList.add("correct");
+    stopSpeaking();
+    // Phát âm lại từ đúng
+    speak(currentAnswer.word);
+    setTimeout(() => {
+      nextQuestion();
+    }, NEXT_DELAY_MS);
+  } else {
+    // SAI
+    wrongTotal++;
+    wrongCountEl.textContent = wrongTotal;
+    tile.classList.add("wrong");
+    // Disable tile sai
+    setTimeout(() => {
+      tile.classList.remove("wrong");
+      tile.style.opacity = "0.4";
+      tile.style.pointerEvents = "none";
+    }, 500);
+  }
+}
+
+// ====== Thu nhỏ chữ nếu tràn ======
+function fitTile(tile) {
+  const MIN_FONT = 8;
+  const wordEl = tile.querySelector(".word");
+  const meaningEl = tile.querySelector(".meaning");
+  if (!wordEl || !meaningEl) return;
+
+  // Reset
+  wordEl.style.fontSize = "";
+  meaningEl.style.fontSize = "";
+
+  let wSize = parseFloat(getComputedStyle(wordEl).fontSize);
+  let mSize = parseFloat(getComputedStyle(meaningEl).fontSize);
+
+  while (
+    (wSize > MIN_FONT || mSize > MIN_FONT) &&
+    (tile.scrollHeight > tile.clientHeight || tile.scrollWidth > tile.clientWidth)
+  ) {
+    if (wSize > MIN_FONT) { wSize -= 0.5; wordEl.style.fontSize = wSize + "px"; }
+    if (mSize > MIN_FONT) { mSize -= 0.5; meaningEl.style.fontSize = mSize + "px"; }
+  }
+}
+
+function fitAllTiles() {
+  grid.querySelectorAll(".tile").forEach(fitTile);
+}
+
+// ====== Events ======
+exitBtn.addEventListener("click", () => { location.href = "/"; });
+
+playBtn.addEventListener("click", () => {
+  if (currentAnswer) speak(currentAnswer.word);
+});
+
+muteBtn.addEventListener("click", () => {
+  isMuted = !isMuted;
+  if (ttsAudio) ttsAudio.volume = isMuted ? 0 : (volumeSlider.value / 100);
+  muteBtn.style.color = isMuted ? "#dc2626" : "";
+});
+
+volumeSlider.addEventListener("input", () => {
+  const v = volumeSlider.value;
+  volumeSlider.style.setProperty("--vol-pct", v + "%");
+  if (ttsAudio) ttsAudio.volume = v / 100;
+  if (v > 0) isMuted = false;
+  muteBtn.style.color = "";
+});
+
+settingsBtn.addEventListener("click", () => {
+  settingsOverlay.classList.add("show");
+});
+closeSettingsBtn.addEventListener("click", () => {
+  settingsOverlay.classList.remove("show");
+});
+settingsOverlay.addEventListener("click", (e) => {
+  if (e.target === settingsOverlay) settingsOverlay.classList.remove("show");
+});
+
+// Khi thay đổi số lựa chọn → tải lại câu hỏi
+optCountSelect.addEventListener("change", () => {
+  if (currentAnswer) {
+    questionNum--;  // để nextQuestion++ ra đúng số
+    nextQuestion();
+  }
+});
+
+window.addEventListener("resize", fitAllTiles);
+
+// ====== Khởi động ======
+(async function init() {
+  vocabulary = await loadVocabulary();
+  nextQuestion();
+})();
+</script>
+</body>
+</html>

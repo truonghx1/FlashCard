@@ -280,7 +280,7 @@ function renderHome() {
     // Nút chơi game "Ghép từ với nghĩa" cho riêng bộ này
     const play = document.createElement("button");
     play.className =
-      "absolute top-2 right-10 p-2 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition";
+      "absolute top-2 right-18 p-2 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition";
     play.title = "Chơi game ghép từ";
     play.setAttribute("aria-label", "Chơi game ghép từ");
     play.textContent = "🎮";
@@ -289,8 +289,21 @@ function renderHome() {
       location.href = "/game.html?deck=" + encodeURIComponent(deck.id);
     });
 
+    // Nút chơi game "Nghe và chọn từ" cho riêng bộ này
+    const listen = document.createElement("button");
+    listen.className =
+      "absolute top-2 right-10 p-2 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition";
+    listen.title = "Nghe và chọn từ";
+    listen.setAttribute("aria-label", "Nghe và chọn từ");
+    listen.textContent = "🎧";
+    listen.addEventListener("click", (e) => {
+      e.stopPropagation();
+      location.href = "/listen.html?deck=" + encodeURIComponent(deck.id);
+    });
+
     wrap.appendChild(btn);
     wrap.appendChild(play);
+    wrap.appendChild(listen);
     wrap.appendChild(edit);
     deckList.appendChild(wrap);
   });
