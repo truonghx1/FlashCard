@@ -34,5 +34,11 @@
     "name": "Product manufacture",
     "emoji": "👨‍",
     "file": "data/product-manufacture.json"
+  },
+  {
+    "id": "recruiment-1",
+    "name": "Recruiment 1",
+    "emoji": "🤪",
+    "file": "data/recruiment-1.json"
   }
 ]
