@@ -359,10 +359,18 @@ function shuffle(arr) {
 // Ưu tiên proxy cùng tên miền /api/tts (đã có sẵn trong project),
 // dự phòng Google TTS rồi Web Speech API.
 let ttsAudio = null;
+// Các giọng đọc chuẩn TOEIC (Mỹ, Anh, Úc). Mỗi lần phát sẽ random 1 giọng.
+const TTS_VOICES = ["en-US", "en-GB", "en-AU"];
+let currentTtsTl = "en-US";
+function pickRandomVoice() {
+  currentTtsTl = TTS_VOICES[Math.floor(Math.random() * TTS_VOICES.length)];
+  return currentTtsTl;
+}
 const TTS_SOURCES = [
-  (t) => "/api/tts?tl=en&text=" + encodeURIComponent(t),
+  (t) => "/api/tts?tl=" + currentTtsTl + "&text=" + encodeURIComponent(t),
   (t) =>
-    "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q=" +
+    "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=" +
+    currentTtsTl + "&q=" +
     encodeURIComponent(t),
 ];
 function speakWithSynthesis(text) {
@@ -370,7 +378,7 @@ function speakWithSynthesis(text) {
   try {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = "en-US";
+    u.lang = currentTtsTl || "en-US";
     u.rate = 0.95;
     window.speechSynthesis.speak(u);
   } catch {}
@@ -391,6 +399,7 @@ function playTts(text, i) {
 function speak(text) {
   if (!text) return;
   try { if (ttsAudio) { ttsAudio.pause(); ttsAudio.currentTime = 0; } } catch {}
+  pickRandomVoice();
   playTts(text, 0);
 }
 
