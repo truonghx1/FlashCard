@@ -687,11 +687,12 @@ function fitText(el) {
     parseFloat(style.paddingLeft) -
     parseFloat(style.paddingRight) -
     SAFE;
-  const maxFont = 40; // px - cỡ chữ lớn nhất
+  const maxFont = 72; // px - cỡ chữ lớn nhất (chữ ít sẽ to & dễ nhìn)
   const minFont = 9; // px - cỡ chữ nhỏ nhất (chữ dài sẽ nhỏ lại để hiện đủ)
   let size = maxFont;
   el.style.fontSize = size + "px";
-  // giảm dần đến khi chữ nằm gọn trong vùng nội dung
+  // giảm dần đến khi chữ nằm gọn trong vùng nội dung.
+  // Chữ ít -> giữ nguyên cỡ lớn; chữ nhiều/tràn -> tự nhỏ lại cho vừa.
   while (
     size > minFont &&
     (el.scrollHeight > availH || el.scrollWidth > availW)
