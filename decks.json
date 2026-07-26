@@ -40,5 +40,11 @@
     "name": "Recruiment 1",
     "emoji": "🤪",
     "file": "data/recruiment-1.json"
+  },
+  {
+    "id": "interview-onboard",
+    "name": "Interview onboard",
+    "emoji": "🗂️",
+    "file": "data/interview-onboard.json"
   }
 ]
