@@ -98,5 +98,13 @@
   {
     "front": "25. Không biết",
     "back": "I'm not sure yet, but I'll check and get back to you."
+  },
+  {
+    "front": "26. Xin giúp đỡ",
+    "back": "Could you help me with this? Could you show me how to do this?"
+  },
+  {
+    "front": "27. Cảm ơn",
+    "back": "Thank you for your help. I really appreciate it."
   }
 ]
