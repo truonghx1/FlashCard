@@ -675,7 +675,10 @@ function fitText(el) {
   const face = el.parentElement;
   const style = getComputedStyle(face);
   // vùng nội dung thực (đã trừ padding) để chữ luôn nằm gọn và canh giữa.
-  // Trừ thêm một chút (SAFE) để dòng cuối không bị viền/bo góc che khuất.
+  // Chiều cao trừ thêm SAFE để dòng cuối không bị che khuất.
+  // LƯU Ý: bề rộng KHÔNG trừ SAFE — span có width:100% nên scrollWidth luôn
+  // bằng bề rộng vùng chứa; nếu trừ bớt, điều kiện tràn ngang luôn đúng
+  // và chữ bị ép nhỏ tối đa (bug chữ nhỏ/che khuất trước đây).
   const SAFE = 4;
   const availH =
     face.clientHeight -
@@ -685,8 +688,7 @@ function fitText(el) {
   const availW =
     face.clientWidth -
     parseFloat(style.paddingLeft) -
-    parseFloat(style.paddingRight) -
-    SAFE;
+    parseFloat(style.paddingRight);
   // Cỡ chữ khởi điểm theo độ dài chữ (giống Quizlet):
   // chữ ngắn -> to, câu dài -> vừa phải, sau đó thu nhỏ thêm nếu vẫn tràn.
   const len = (el.textContent || "").length;
