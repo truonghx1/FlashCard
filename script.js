@@ -674,17 +674,21 @@ function renderCard() {
 function fitText(el) {
   const face = el.parentElement;
   const style = getComputedStyle(face);
-  // vùng nội dung thực (đã trừ padding) để chữ luôn nằm gọn và canh giữa
+  // vùng nội dung thực (đã trừ padding) để chữ luôn nằm gọn và canh giữa.
+  // Trừ thêm một chút (SAFE) để dòng cuối không bị viền/bo góc che khuất.
+  const SAFE = 4;
   const availH =
     face.clientHeight -
     parseFloat(style.paddingTop) -
-    parseFloat(style.paddingBottom);
+    parseFloat(style.paddingBottom) -
+    SAFE;
   const availW =
     face.clientWidth -
     parseFloat(style.paddingLeft) -
-    parseFloat(style.paddingRight);
+    parseFloat(style.paddingRight) -
+    SAFE;
   const maxFont = 40; // px - cỡ chữ lớn nhất
-  const minFont = 12; // px - cỡ chữ nhỏ nhất
+  const minFont = 9; // px - cỡ chữ nhỏ nhất (chữ dài sẽ nhỏ lại để hiện đủ)
   let size = maxFont;
   el.style.fontSize = size + "px";
   // giảm dần đến khi chữ nằm gọn trong vùng nội dung
