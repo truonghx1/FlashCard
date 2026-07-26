@@ -687,12 +687,18 @@ function fitText(el) {
     parseFloat(style.paddingLeft) -
     parseFloat(style.paddingRight) -
     SAFE;
-  const maxFont = 72; // px - cỡ chữ lớn nhất (chữ ít sẽ to & dễ nhìn)
-  const minFont = 9; // px - cỡ chữ nhỏ nhất (chữ dài sẽ nhỏ lại để hiện đủ)
+  // Cỡ chữ khởi điểm theo độ dài chữ (giống Quizlet):
+  // chữ ngắn -> to, câu dài -> vừa phải, sau đó thu nhỏ thêm nếu vẫn tràn.
+  const len = (el.textContent || "").length;
+  let maxFont;
+  if (len <= 15) maxFont = 48;      // 1-2 từ ngắn
+  else if (len <= 40) maxFont = 36; // cụm từ
+  else if (len <= 90) maxFont = 28; // câu ngắn
+  else maxFont = 22;                // đoạn dài
+  const minFont = 12; // px - cỡ chữ nhỏ nhất, vẫn đọc được
   let size = maxFont;
   el.style.fontSize = size + "px";
-  // giảm dần đến khi chữ nằm gọn trong vùng nội dung.
-  // Chữ ít -> giữ nguyên cỡ lớn; chữ nhiều/tràn -> tự nhỏ lại cho vừa.
+  // giảm dần đến khi chữ nằm gọn trong vùng nội dung
   while (
     size > minFont &&
     (el.scrollHeight > availH || el.scrollWidth > availW)
