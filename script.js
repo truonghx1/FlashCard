@@ -700,6 +700,7 @@ function fitText(el) {
   const minFont = 12; // px - cỡ chữ nhỏ nhất, vẫn đọc được
   let size = maxFont;
   el.style.fontSize = size + "px";
+  el.style.overflowY = "";
   // giảm dần đến khi chữ nằm gọn trong vùng nội dung
   while (
     size > minFont &&
@@ -707,6 +708,14 @@ function fitText(el) {
   ) {
     size -= 1;
     el.style.fontSize = size + "px";
+  }
+  // Khung quá thấp (vd: embed Notion rất hẹp) mà cỡ nhỏ nhất vẫn tràn
+  // -> cho phép cuộn dọc thay vì che khuất chữ
+  if (el.scrollHeight > availH) {
+    el.style.overflowY = "auto";
+    el.style.maxHeight = availH + "px";
+  } else {
+    el.style.maxHeight = "";
   }
 }
 
@@ -859,12 +868,28 @@ saveGitBtn.addEventListener("click", saveDeckToGithub);
 // Nút back/forward của trình duyệt
 window.addEventListener("popstate", () => routeFromPath(false));
 
-// Tính lại cỡ chữ khi đổi kích thước cửa sổ (vd: iframe Notion co giãn)
-window.addEventListener("resize", () => {
+// Nét lại cỡ chữ mỗi khi KÍCH THƯỚC THẺ thay đổi (không chỉ window.resize).
+// Quan trọng khi embed vào Notion / mở trên điện thoại: iframe co giãn SAU
+// khi render nên resize của window không bắt được hết.
+function refitCard() {
   if (studyView.classList.contains("hidden")) return;
   fitText(frontText);
   fitText(backText);
-});
+}
+window.addEventListener("resize", refitCard);
+if ("ResizeObserver" in window) {
+  let rafId = 0;
+  const ro = new ResizeObserver(() => {
+    // gộp nhiều lần thay đổi liên tiếp vào 1 frame
+    cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(refitCard);
+  });
+  ro.observe(card);
+}
+// Font tải xong mới có số đo chính xác -> tính lại 1 lần nữa
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(refitCard);
+}
 
 // Điều hướng bằng phím (tiện khi không nhúng iframe)
 // ArrowLeft: thẻ trái | ArrowRight: thẻ phải | Space: lật thẻ | Ctrl: đọc văn bản
