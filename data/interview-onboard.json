@@ -1,0 +1,18 @@
+[
+  {
+    "front": "1. Tell me a little bit about yourself.",
+    "back": "Hi everyone. My name is Truong. I'm 32 years old, and I'm from Vietnam. I have been working in cybersecurity at LG for several years. My main work is security integration testing. I test security features such as Firewall, SMACK, and OTA to make sure they work correctly. I also have experience in C, C++, and automation. I enjoy solving technical problems and learning new technologies. I'm very happy to join this team, and I'm looking forward to learning from everyone."
+  },
+  {
+    "front": "2. Can you introduce your previous work?",
+    "back": "In my previous job at LG, I worked as a cybersecurity engineer. I mainly performed integration testing for different security features. I verified that the security functions worked correctly after new software was integrated. I also developed automation tools to reduce manual testing and improve testing efficiency."
+  },
+  {
+    "front": "3. What are your main technical skills?",
+    "back": "My main programming languages are C and C++. I also have experience with automation scripting and Linux. Most of my work has been related to security testing and software validation."
+  },
+  {
+    "front": "4. What security features have you worked on?",
+    "back": "I have worked on several security features, including Firewall, SMACK, OTA, and other embedded security modules. My responsibility was mainly integration testing and verifying that the features worked as expected."
+  }
+]
