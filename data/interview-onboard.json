@@ -14,5 +14,89 @@
   {
     "front": "4. What security features have you worked on?",
     "back": "I have worked on several security features, including Firewall, SMACK, OTA, and other embedded security modules. My responsibility was mainly integration testing and verifying that the features worked as expected."
+  },
+  {
+    "front": "5. What sparked your interest in cybersecurity?",
+    "back": "I enjoy solving problems and understanding how systems work. Cybersecurity is interesting because it requires both technical knowledge and careful thinking.Every project gives me something new to learn."
+  },
+  {
+    "front": "6. What do you usually do when you need to learn something new?",
+    "back": "First, I search online for documentation, tutorials, or videos to understand the basics. Then I try it myself in a test environment. If I still have questions, I discuss them with my teammates. I also take notes so I can remember what I learn."
+  },
+  {
+    "front": "7. Do you collaborate with your teammates?",
+    "back": "Yes, definitely.I believe teamwork is very important. When I face a difficult problem, I discuss it with my teammates. Sometimes they have different ideas that help me solve the problem much faster."
+  },
+  {
+    "front": "8. What's one thing you enjoy about working in a team?",
+    "back": "I enjoy sharing ideas and learning from my teammates. Everyone has different experiences, so we can solve problems more efficiently together."
+  },
+  {
+    "front": "9. Tell me about a challenge you faced recently.",
+    "back": "One challenge was debugging a security feature after integrating new software. The feature worked before the integration, but it failed afterward. I checked the logs, compared the changes, and worked with other engineers to identify the root cause. Finally, we fixed the issue and completed the testing successfully."
+  },
+  {
+    "front": "10. What is your biggest strength?",
+    "back": "I learn new technologies quickly. I'm patient when solving technical problems. I always try to understand the root cause instead of only fixing the symptoms."
+  },
+  {
+    "front": "11. What is your weakness?",
+    "back": "Sometimes I spend too much time trying to make everything perfect. Recently, I've been learning to balance quality and efficiency by managing my time better."
+  },
+  {
+    "front": "12. Why did you join our company?",
+    "back": "I'm looking for new challenges and opportunities to grow. I believe your company has strong technologies and experienced engineers. I want to improve my technical skills and contribute to the team."
+  },
+  {
+    "front": "13. Why are you leaving LG?",
+    "back": "I learned a lot at LG and I'm thankful for the experience. Now I'm looking for new challenges and opportunities to continue growing in my career."
+  },
+  {
+    "front": "14. What are your expectations for this job?",
+    "back": "My goal is to learn the new system as quickly as possible. I hope I can contribute to the team and continue improving my technical skills."
+  },
+  {
+    "front": "15. How do you manage your tasks?",
+    "back": "I usually make a task list and prioritize the most important work first. If I have any blockers, I communicate with my teammates early. I also keep notes to track my progress."
+  },
+  {
+    "front": "16. How do you handle pressure?",
+    "back": "I stay calm and focus on one problem at a time. I break large tasks into smaller steps. If necessary, I ask my teammates for help."
+  },
+  {
+    "front": "17. Have you ever made a mistake?",
+    "back": "Yes, of course. Everyone makes mistakes. When it happens, I try to understand why it happened, fix it quickly, and make sure it doesn't happen again."
+  },
+  {
+    "front": "18. Can you describe your automation experience?",
+    "back": "I have experience developing automation tools to reduce manual testing. Automation helps improve testing efficiency and saves time. I also maintain the scripts when requirements change."
+  },
+  {
+    "front": "19. What operating systems are you familiar with?",
+    "back": "Most of my work has been on Linux. I'm comfortable using the Linux command line for development and testing. I also use Git for version control."
+  },
+  {
+    "front": "20. What are your goals for the next few years?",
+    "back": "I want to become a stronger cybersecurity engineer. I hope to improve both my technical skills and my communication skills. I also want to contribute more to automation and security testing."
+  },
+  {
+    "front": "21. Do you have any questions for us?",
+    "back": "Yes, I do. What will be my main responsibilities during the first few months?Could you tell me more about the team and the current projects? What should I focus on first to become productive quickly?"
+  },
+  {
+    "front": "22. Say hello",
+    "back": "Hi everyone. Nice to meet you. I'm Truong. I'm excited to join the team."
+  },
+  {
+    "front": "23. Không nge kịp",
+    "back": "Sorry, could you say that again? Sorry, could you speak a little more slowly? Sorry, I didn't catch that."
+  },
+  {
+    "front": "24. Xác nhận",
+    "back": "Just to make sure I understand correctly..."
+  },
+  {
+    "front": "25. Không biết",
+    "back": "I'm not sure yet, but I'll check and get back to you."
   }
 ]
